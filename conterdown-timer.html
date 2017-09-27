@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+	<meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+        button {
+            position: absolute;
+            left: 186px;
+            top: 183px;
+            display:block;
+            height: 150px;
+            width: 150px;
+            border-radius: 50%;
+            border: none;
+            font-weight: bold;
+            font-size: 35px;
+        }
+        #arc {
+            fill: #06984b;
+        }
+        #center {
+            fill:black;
+        }
+         button:focus, button:active{ 
+             outline: 0 none; 
+         }
+    </style>
+</head>
+
+<body>
+    <script>
+
+        var radius = 200;
+            margin = 50;
+            width = (radius + margin) * 2;
+            height = (radius + margin) * 2;
+
+            container = d3.select("body")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            arccontainer = container
+                .append("g")
+                .attr("transform", "translate(" + (radius + margin) + "," + (radius + margin) + ")");
+
+            txtcontainer = container
+                .append("text")
+                .attr("transform", "translate(" + (radius + margin) + "," + (radius + margin) + ")")
+                .attr("x", -50)
+                .attr("y", 30)
+                .attr("font-size",100)
+                .attr("id", "center");
+            movingCircle = arccontainer.append("path");
+
+            var arc = d3.arc()
+                .innerRadius(150)
+                .outerRadius(radius)
+                .startAngle(0);
+
+            var animatedRing = arccontainer.append("path").datum({ endAngle: 0 }).attr("d", arc);
+
+            
+
+            function tweenArc(finish) {
+                var start = {
+                    startAngle: 0,
+                    endAngle: Math.PI * 2
+                };
+
+                var finish = {
+                    startAngle: 0,
+                    endAngle: 0
+                }
+
+                var interpolator = d3.interpolate(start, finish);
+                return function (d) { return arc(interpolator(d)); }
+            }
+
+
+
+            function countDown(endtime) {
+                var t = Date.parse(endtime) - Date.parse(new Date());
+                var seconds = t / 1000;
+                return { "seconds": seconds };
+
+            }
+
+            function createTimer(id, endtime) {
+                var clock = document.getElementById(id);
+                function update() {
+
+                    var t = countDown(endtime);
+                    
+                    var data = Math.PI / 30 * t.seconds
+ 
+                    clock.innerHTML = ('0' + t.seconds).slice(-2);
+
+                    if (t.seconds == 0) {
+                        document.getElementById("arc").style.visibility = "hidden";
+                    }
+                    if (t.seconds == -1) {
+                        document.getElementById("center").style.visibility = "visible";
+                        clock.innerHTML = "00";
+                    }
+                    if (t.seconds == -2) {
+                        clearInterval(timeinterval);
+                        initial("center");
+                        document.getElementById("arc").style.visibility = "visible";
+                    }
+
+                }
+                update();
+                var timeinterval = setInterval(update, 1000);
+            }
+
+            function tweenArc() {
+                var start = {
+                    startAngle: 0,
+                    endAngle: Math.PI * 2
+                };
+
+                var finish = {
+                    startAngle: 0,
+                    endAngle: 0
+                }
+
+                var interpolator = d3.interpolate(start, finish);
+                return function (d) { return arc(interpolator(d)); }
+            }
+
+
+            function initial(id) {
+                var clock = document.getElementById(id);
+                clock.innerHTML = 10;
+                var arc = d3.arc()
+                     .innerRadius(150)
+                     .outerRadius(radius)
+                     .startAngle(0)
+                     .endAngle(2 * Math.PI);
+                createButton();
+                animatedRing.attr("d", arc).attr("id", "arc").attr("opacity", 0.5);
+            }// create initial looking for the timer
+
+            function createButton() {
+                var button = document.createElement("button");
+                button.innerHTML = "START";
+                var body = document.getElementsByTagName("body")[0];
+                body.appendChild(button).setAttribute("id", "button");
+
+                button.addEventListener("click", function () {
+                    document.getElementById("button").remove();
+                    movingCircle.attr("opacity", 1);
+                    deadline = new Date(Date.parse(new Date()) + 10 * 1000);
+                    createTimer("center", deadline);
+                    //current time plus 60 seconds.
+                    animatedRing.transition().duration(10000).attrTween("d", tweenArc);
+
+
+                });
+            }
+
+            initial("center");
+
+    </script>
+</body>
+</html>
